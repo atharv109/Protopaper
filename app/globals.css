@@ -1,0 +1,85 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+@import "tailwindcss";
+
+@theme {
+  --color-bg: #010104;
+  --color-surface-1: #1D1360;
+  --color-surface-2: #201186;
+  --color-accent: #5A47B1;
+  --color-accent-light: #8875D6;
+  --color-muted: #60606D;
+  --color-light: #FEFEFE;
+  --color-lavender: #A39ACF;
+
+  --font-family-display: "Cormorant Garamond", Georgia, serif;
+  --font-family-body: "DM Sans", sans-serif;
+  --font-family-code: "DM Mono", "Fira Code", monospace;
+
+  --animate-shimmer: shimmer 1.5s infinite;
+  --animate-fade-in: fadeIn 0.3s ease;
+  --animate-slide-up: slideUp 0.4s ease;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background-color: #010104;
+  color: #FEFEFE;
+  font-family: "DM Sans", sans-serif;
+}
+
+body {
+  background-color: #010104;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: #010104; }
+::-webkit-scrollbar-thumb { background: #5A47B1; border-radius: 4px; }
+
+.shimmer {
+  background: linear-gradient(90deg, #1D1360 25%, #201186 50%, #1D1360 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.glow-btn {
+  box-shadow: 0 0 20px rgba(90, 71, 177, 0.4), 0 0 40px rgba(90, 71, 177, 0.15);
+  transition: box-shadow 0.3s ease;
+}
+.glow-btn:hover {
+  box-shadow: 0 0 30px rgba(136, 117, 214, 0.6), 0 0 60px rgba(136, 117, 214, 0.2);
+}
+
+.card-border {
+  border: 1px solid rgba(254, 254, 254, 0.1);
+}
+
+.glow-border {
+  border: 1px solid rgba(90, 71, 177, 0.6);
+  box-shadow: 0 0 20px rgba(90, 71, 177, 0.2);
+}
+
+pre {
+  font-family: "DM Mono", monospace;
+  font-size: 0.8rem;
+  line-height: 1.7;
+}
+
+.font-display { font-family: "Cormorant Garamond", Georgia, serif; }
+.font-body { font-family: "DM Sans", sans-serif; }
+.font-code { font-family: "DM Mono", monospace; }
