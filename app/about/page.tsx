@@ -25,7 +25,7 @@ export default function AboutPage() {
 
           <p>
             Our engine parses the semantic structure of any ML/AI paper — extracting the core problem
-            formulation, architecture decisions, dataset requirements, training hyperparameters, and
+            formulation, architecture decisions, dataset requirements, training configuration, and
             implementation details — then synthesizes them into ready-to-run scaffolding you can
             actually build on.
           </p>

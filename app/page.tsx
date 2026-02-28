@@ -4,6 +4,7 @@ import Tabs from "@/components/Tabs";
 import Button from "@/components/Button";
 import UploadDropzone from "@/components/UploadDropzone";
 import OutputPanel from "@/components/OutputPanel";
+import { ScaffoldOutput, GenerateResponse } from "@/lib/types";
 
 const INPUT_TABS = [
   { id: "pdf", label: "PDF", icon: "📄" },
@@ -11,7 +12,7 @@ const INPUT_TABS = [
   { id: "text", label: "Text", icon: "✏️" },
 ];
 
-type OutputState = "empty" | "loading" | "populated";
+type OutputState = "empty" | "loading" | "populated" | "error";
 
 export default function HomePage() {
   const [activeTab, setActiveTab] = useState("pdf");
@@ -19,10 +20,74 @@ export default function HomePage() {
   const [url, setUrl] = useState("");
   const [text, setText] = useState("");
   const [outputState, setOutputState] = useState<OutputState>("empty");
+  const [outputData, setOutputData] = useState<ScaffoldOutput | undefined>();
+  const [outputError, setOutputError] = useState<string | undefined>();
 
-  const handleGenerate = () => {
+  const handleGenerate = async () => {
     setOutputState("loading");
-    setTimeout(() => setOutputState("populated"), 2200);
+    setOutputError(undefined);
+
+    try {
+      let inputText = "";
+      let inputType = "text";
+      let title = "Unknown";
+
+      if (activeTab === "pdf" && pdfFile) {
+        // For now, we'll need to extract text from PDF on the backend
+        // For demo purposes, showing user they need to paste content
+        inputText = `PDF File: ${pdfFile.name} (text extraction coming soon)`;
+        inputType = "pdf";
+        title = pdfFile.name;
+      } else if (activeTab === "url" && url.trim()) {
+        inputText = url;
+        inputType = "url";
+        title = url;
+      } else if (activeTab === "text" && text.trim()) {
+        inputText = text;
+        inputType = "text";
+        title = "User-provided text";
+      }
+
+      if (!inputText.trim()) {
+        setOutputState("error");
+        setOutputError("Please provide input content");
+        return;
+      }
+
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: inputText,
+          title,
+          source: activeTab === "url" ? url : "webapp",
+          inputType,
+        }),
+      });
+
+      const result = (await response.json()) as GenerateResponse;
+
+      if (response.status === 429) {
+        // rate limit hit – show explanatory text
+        setOutputState("error");
+        setOutputError(
+          "Daily token limit reached for the current Groq plan. Please wait a while or upgrade your plan at https://console.groq.com/settings/billing."
+        );
+        return;
+      }
+
+      if (!response.ok || !result.success) {
+        setOutputState("error");
+        setOutputError(result.error || "Failed to generate blueprint");
+        return;
+      }
+
+      setOutputData(result.data);
+      setOutputState("populated");
+    } catch (error) {
+      setOutputState("error");
+      setOutputError(`Error: ${(error as Error).message}`);
+    }
   };
 
   const canGenerate = (activeTab === "pdf" && pdfFile) ||
@@ -141,7 +206,7 @@ export default function HomePage() {
           <div className="rounded-2xl p-6 card-border"
             style={{ background: "rgba(1,1,4,0.5)" }}>
             <h2 className="text-sm font-medium text-lavender mb-5 tracking-wide uppercase">Blueprint Output</h2>
-            <OutputPanel state={outputState} />
+            <OutputPanel state={outputState} data={outputData} error={outputError} />
           </div>
         </div>
       </div>

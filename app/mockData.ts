@@ -11,13 +11,6 @@ export const MOCK_OUTPUT = {
   datasets: `Pre-training: C4 (750GB, filtered), Books3 (196GB), OpenWebText2 (65GB)
 Fine-tuning: GLUE benchmark suite (MNLI, SST-2, QQP, QNLI, CoLA), SuperGLUE (BoolQ, CB, WiC, WSC), SCROLLS (long-doc tasks: SummScreenFD, GovReport, QMSum)`,
 
-  hyperparameters: `Learning rate: 2e-4 (linear warmup 10k steps, cosine decay)
-Batch size: 2048 (gradient accumulation × 4)
-Weight decay: 0.01 | Dropout: 0.1
-Optimizer: AdamW (β₁=0.9, β₂=0.999, ε=1e-8)
-Training: 100k steps on 32× A100 80GB GPUs
-Precision: bfloat16 mixed precision`,
-
   code: `import torch
 import torch.nn as nn
 from transformers import AutoTokenizer

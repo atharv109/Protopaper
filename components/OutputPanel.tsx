@@ -2,12 +2,14 @@
 import Accordion, { AccordionItem } from "./Accordion";
 import CodeBlock from "./CodeBlock";
 import { SkeletonBlock } from "./Skeleton";
-import { MOCK_OUTPUT } from "@/app/mockData";
+import { ScaffoldOutput } from "@/lib/types";
 
-type OutputState = "empty" | "loading" | "populated";
+type OutputState = "empty" | "loading" | "populated" | "error";
 
 interface OutputPanelProps {
   state: OutputState;
+  data?: ScaffoldOutput;
+  error?: string;
 }
 
 function ConfidenceBadge({ confidence }: { confidence: number }) {
@@ -31,7 +33,7 @@ function StatusIcon({ done }: { done: boolean }) {
   );
 }
 
-export default function OutputPanel({ state }: OutputPanelProps) {
+export default function OutputPanel({ state, data, error }: OutputPanelProps) {
   if (state === "empty") {
     return (
       <div className="h-full flex flex-col items-center justify-center text-center p-12 rounded-2xl card-border"
@@ -60,33 +62,74 @@ export default function OutputPanel({ state }: OutputPanelProps) {
     );
   }
 
-  const data = MOCK_OUTPUT;
+  if (state === "error" || !data) {
+    return (
+      <div className="h-full flex flex-col items-center justify-center text-center p-12 rounded-2xl card-border"
+        style={{ background: "rgba(1,1,4,0.4)", minHeight: "400px" }}>
+        <div className="w-20 h-20 rounded-3xl flex items-center justify-center mb-6"
+          style={{ background: "rgba(220,38,38,0.1)", border: "1px solid rgba(220,38,38,0.3)" }}>
+          <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="rgba(220,38,38,0.7)" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4v.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <p className="font-display text-2xl text-red-400 mb-2">Generation Failed</p>
+        <p className="text-muted text-sm max-w-md">{error || "An error occurred while generating the blueprint. Please try again with different text."}</p>
+      </div>
+    );
+  }
+
+  // Populated state with real data
+  const paperSummary = `${data.paper.problem_statement}\n\nKey contributions: ${data.paper.key_contributions?.join(", ") || "N/A"}`;
+  const architecture = data.extracted.model_architecture;
 
   return (
     <div className="animate-[slideUp_0.4s_ease]">
       <div className="flex items-center gap-3 mb-5 px-1">
         <div className="w-2 h-2 rounded-full bg-green-400" />
         <span className="text-sm text-green-400 font-medium">Blueprint generated</span>
+        {data._quality_score !== undefined && (
+          <span className="text-xs text-muted ml-auto">Quality: {data._quality_score}%</span>
+        )}
       </div>
       <Accordion>
         <AccordionItem title="🧠 Problem & Method" defaultOpen>
-          <p className="text-sm text-light/70 leading-relaxed">{data.problem}</p>
+          <p className="text-sm text-light/70 leading-relaxed whitespace-pre-line">{paperSummary}</p>
         </AccordionItem>
         <AccordionItem title="🏗 Architecture">
-          <p className="text-sm text-light/70 whitespace-pre-line leading-relaxed">{data.architecture}</p>
+          <p className="text-sm text-light/70 whitespace-pre-line leading-relaxed">{architecture}</p>
         </AccordionItem>
         <AccordionItem title="📦 Datasets">
-          <p className="text-sm text-light/70 whitespace-pre-line leading-relaxed">{data.datasets}</p>
+          <div className="flex flex-col gap-3">
+            {data.datasets?.map((ds, i) => (
+              <div key={i} className="p-3 rounded-lg" style={{ background: "rgba(90,71,177,0.15)" }}>
+                <p className="text-sm font-medium text-lavender">{ds.name}</p>
+                <p className="text-xs text-muted mt-0.5">Role: {ds.role}</p>
+                <p className="text-xs text-light/60 mt-1">{ds.size}</p>
+              </div>
+            ))}
+          </div>
         </AccordionItem>
-        <AccordionItem title="⚙ Hyperparameters">
-          <p className="text-sm font-code text-lavender/80 whitespace-pre-line leading-relaxed">{data.hyperparameters}</p>
+        <AccordionItem title="⚙ Experiment Plan">
+          <div className="space-y-3 text-sm text-light/70">
+            <div>
+              <p className="font-medium text-lavender mb-1">Steps:</p>
+              <ol className="list-decimal list-inside space-y-1">
+                {data.experiment_plan?.step_by_step?.map((step, i) => (
+                  <li key={i} className="text-xs">{step}</li>
+                ))}
+              </ol>
+            </div>
+          </div>
         </AccordionItem>
         <AccordionItem title="💻 Starter Code">
-          <CodeBlock code={data.code} language="Python" />
+          <CodeBlock code={data.starter_code} language="Python" />
+        </AccordionItem>
+        <AccordionItem title="📋 Pseudocode">
+          <CodeBlock code={data.pseudocode} language="python" />
         </AccordionItem>
         <AccordionItem title="🧪 Reproduction Checklist">
           <div className="flex flex-col gap-2.5">
-            {data.checklist.map((item, i) => (
+            {data.reproducibility?.checklist?.map((item, i) => (
               <div key={i} className="flex items-start gap-3">
                 <StatusIcon done={item.done} />
                 <span className={`text-sm ${item.done ? "text-light/60 line-through" : "text-light/80"}`}>{item.text}</span>
@@ -94,9 +137,21 @@ export default function OutputPanel({ state }: OutputPanelProps) {
             ))}
           </div>
         </AccordionItem>
+        <AccordionItem title="🌱 Seeding Plan">
+          <CodeBlock code={data.reproducibility?.seeding_plan?.join("\n") || ""} language="python" />
+        </AccordionItem>
+        {data.reproducibility?.known_issues && data.reproducibility.known_issues.length > 0 && (
+          <AccordionItem title="⚠ Known Issues">
+            <ul className="list-disc list-inside space-y-1 text-sm text-light/70">
+              {data.reproducibility.known_issues.map((issue, i) => (
+                <li key={i}>{issue}</li>
+              ))}
+            </ul>
+          </AccordionItem>
+        )}
         <AccordionItem title="🧾 Assumptions & Confidence">
           <div className="flex flex-col gap-3">
-            {data.assumptions.map((item, i) => (
+            {data.assumptions?.map((item, i) => (
               <div key={i} className="flex items-start justify-between gap-4">
                 <div>
                   <p className="text-sm text-light/80 font-medium">{item.key}</p>
