@@ -18,9 +18,14 @@ export default function Navbar() {
       style={{ background: "rgba(1,1,4,0.8)" }}>
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-9 h-9 relative">
-            <Image src="/logo.png" alt="proto paper logo" fill className="object-contain" />
+        <Link href="/" className="flex items-center gap-2 group">
+          <div className="w-14 h-14 relative flex-shrink-0">
+            <Image
+              src="/logo.png"
+              alt="proto paper logo"
+              fill
+              className="object-contain drop-shadow-lg"
+            />
           </div>
           <span className="font-display text-xl tracking-wide text-light/90 group-hover:text-light transition-colors">
             proto <span className="text-lavender">paper</span>
@@ -48,10 +53,7 @@ export default function Navbar() {
           ) : (
             <Link href="/login"
               className="px-5 py-2 text-sm rounded-xl glow-btn transition-all font-medium"
-              style={{
-                background: "linear-gradient(135deg, #5A47B1, #8875D6)",
-                color: "#FEFEFE",
-              }}>
+              style={{ background: "linear-gradient(135deg, #5A47B1, #8875D6)", color: "#FEFEFE" }}>
               Login
             </Link>
           )}
